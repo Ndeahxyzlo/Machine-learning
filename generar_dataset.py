@@ -1,19 +1,3 @@
-"""
-generar_dataset.py
-------------------
-Genera un dataset SINTÉTICO de clientes de una empresa de servicios.
-
-Lo importante: el abandono NO es aleatorio. Se calcula con una regla de negocio
-(satisfacción baja, poco tiempo como cliente y poca frecuencia de compra aumentan
-la probabilidad de abandono) más algo de ruido. Así los modelos de ML tienen un
-patrón real que aprender.
-
-El archivo resultante (data/clientes_raw.csv) es "sucio" a propósito: trae nulos,
-duplicados y valores imposibles para que el script de entrenamiento tenga algo
-real que limpiar con Pandas.
-
-Uso:  python generar_dataset.py
-"""
 from pathlib import Path
 
 import numpy as np
@@ -50,18 +34,15 @@ def generar() -> pd.DataFrame:
     ]
     edad = np.clip(rng.normal(38, 12, n), 18, 75).round().astype(int)
 
-    # Ingresos mensuales en COP (distribución sesgada a la derecha, como en la vida real)
     ingresos = np.exp(rng.normal(np.log(3_200_000), 0.45, n))
     ingresos = (np.clip(ingresos, 1_000_000, 15_000_000) / 50_000).round() * 50_000
 
-    tiempo_cliente = np.clip(rng.exponential(30, n) + 1, 1, 120).round().astype(int)  # meses
-    satisfaccion = np.clip(rng.normal(6.5, 2.0, n).round(), 1, 10).astype(int)         # 1 a 10
+    tiempo_cliente = np.clip(rng.exponential(30, n) + 1, 1, 120).round().astype(int)
+    satisfaccion = np.clip(rng.normal(6.5, 2.0, n).round(), 1, 10).astype(int)
 
-    # La frecuencia de compra depende un poco de qué tan satisfecho está el cliente
-    frecuencia = np.clip(rng.poisson(1.5 + 0.35 * satisfaccion, n), 0, 15)             # compras/mes
-    productos = np.clip(rng.poisson(2 + 1.5 * frecuencia, n), 1, 60)                   # últimos 12 meses
+    frecuencia = np.clip(rng.poisson(1.5 + 0.35 * satisfaccion, n), 0, 15)
+    productos = np.clip(rng.poisson(2 + 1.5 * frecuencia, n), 1, 60)
 
-    # --- Regla de negocio que determina la probabilidad real de abandono ---
     logit = (
         -0.75
         - 0.62 * (satisfaccion - 6)
@@ -70,7 +51,7 @@ def generar() -> pd.DataFrame:
         - 0.03 * (productos - 8)
         - 0.015 * (edad - 38)
         - 0.12 * (ingresos / 1_000_000 - 3.2)
-        + rng.normal(0, 0.6, n)  # ruido: dos clientes iguales no siempre se comportan igual
+        + rng.normal(0, 0.6, n)
     )
     abandono = rng.binomial(1, sigmoide(logit))
 
@@ -91,20 +72,16 @@ def generar() -> pd.DataFrame:
 
 
 def ensuciar(df: pd.DataFrame) -> pd.DataFrame:
-    """Agrega problemas típicos de datos reales para practicar la limpieza."""
     df = df.copy()
     df = df.astype({"edad": float, "ingresos": float, "tiempo_cliente": float, "satisfaccion": float})
 
-    # 1) Valores nulos
     for col, cantidad in [("edad", 3), ("ingresos", 4), ("satisfaccion", 3), ("tiempo_cliente", 2)]:
         idx = rng.choice(df.index, size=cantidad, replace=False)
         df.loc[idx, col] = np.nan
 
-    # 2) Valores imposibles (errores de digitación)
     df.loc[rng.choice(df.index, 2, replace=False), "edad"] = [199, 250]
     df.loc[rng.choice(df.index, 1, replace=False), "satisfaccion"] = 11
 
-    # 3) Filas duplicadas
     duplicadas = df.sample(5, random_state=SEMILLA)
     df = pd.concat([df, duplicadas], ignore_index=True)
     return df

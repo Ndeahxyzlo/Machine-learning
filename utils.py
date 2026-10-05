@@ -1,11 +1,3 @@
-"""
-utils.py
---------
-Lógica de la aplicación separada de la interfaz:
-  - carga del modelo y de los datos
-  - clasificación del riesgo (bajo / medio / alto)
-  - historial de predicciones en SQLite
-"""
 import json
 import os
 import sqlite3
@@ -20,15 +12,12 @@ BASE = Path(__file__).parent
 RUTA_DATOS = BASE / "data" / "clientes.csv"
 RUTA_MODELO = BASE / "ml" / "modelo.pkl"
 RUTA_METRICAS = BASE / "ml" / "metricas.json"
-# Se puede cambiar con la variable de entorno CHURN_DB (útil para pruebas)
 RUTA_DB = Path(os.environ.get("CHURN_DB", BASE / "database.db"))
 
-# Umbrales de riesgo sobre la probabilidad de abandono
 UMBRAL_MEDIO = 0.40
 UMBRAL_ALTO = 0.70
 
-COLORES = {"Bajo": "#10B981", "Medio": "#F59E0B", "Alto": "#EF4444"}
-ICONOS = {"Bajo": "🟢", "Medio": "🟡", "Alto": "🔴"}
+COLORES = {"Bajo": "#2F7D5B", "Medio": "#A8741A", "Alto": "#B3362D"}
 
 ETIQUETAS = {
     "edad": "Edad",
@@ -40,9 +29,6 @@ ETIQUETAS = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Modelo y datos
-# ---------------------------------------------------------------------------
 def cargar_modelo() -> dict:
     return joblib.load(RUTA_MODELO)
 
@@ -57,7 +43,6 @@ def cargar_datos() -> pd.DataFrame:
 
 
 def nivel_riesgo(probabilidad: float) -> str:
-    """Convierte una probabilidad (0 a 1) en Bajo, Medio o Alto."""
     if probabilidad >= UMBRAL_ALTO:
         return "Alto"
     if probabilidad >= UMBRAL_MEDIO:
@@ -66,29 +51,32 @@ def nivel_riesgo(probabilidad: float) -> str:
 
 
 def predecir(modelo: dict, datos: dict) -> float:
-    """Devuelve la probabilidad de abandono (0 a 1) de UN cliente."""
-    # Se reordenan las columnas igual que en el entrenamiento: si el orden cambia,
-    # el modelo predice cosas absurdas sin lanzar ningún error.
     X = pd.DataFrame([datos])[modelo["features"]]
     return float(modelo["pipeline"].predict_proba(X)[0, 1])
 
 
 def puntuar_dataset(modelo: dict, df: pd.DataFrame) -> pd.DataFrame:
-    """Agrega probabilidad y nivel de riesgo a todos los clientes del dataset."""
     out = df.copy()
     out["probabilidad"] = modelo["pipeline"].predict_proba(out[modelo["features"]])[:, 1]
     out["riesgo"] = out["probabilidad"].map(nivel_riesgo)
     return out
 
 
+def efecto_variables(modelo: dict, datos: dict, referencia: pd.DataFrame) -> dict:
+    base = predecir(modelo, datos)
+    medianas = referencia[modelo["features"]].median()
+    efectos = {}
+    for col in modelo["features"]:
+        alterado = dict(datos)
+        alterado[col] = float(medianas[col])
+        efectos[col] = base - predecir(modelo, alterado)
+    return efectos
+
+
 def formato_cop(valor) -> str:
-    """1500000 -> $1.500.000"""
     return "$" + f"{int(valor):,}".replace(",", ".")
 
 
-# ---------------------------------------------------------------------------
-# Historial (SQLite)
-# ---------------------------------------------------------------------------
 def _conexion() -> sqlite3.Connection:
     return sqlite3.connect(RUTA_DB)
 

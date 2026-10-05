@@ -1,95 +1,61 @@
-# 🛡️ ChurnGuard — Predicción de abandono de clientes
+# ChurnGuard: predicción de abandono de clientes
 
-Aplicación web de Machine Learning, hecha 100 % en Python, que predice qué clientes de una
-empresa de servicios tienen riesgo de abandonar, y lo muestra en un dashboard profesional.
+Aplicación web de Machine Learning, desarrollada solo con Python, que estima la probabilidad de que un cliente de una empresa de servicios abandone y la presenta en un dashboard.
 
-**Flujo:** Formulario web → Modelo de ML → Predicción → Resultado visual → Registro en historial (SQLite)
+Flujo: formulario web, modelo de ML, predicción, resultado visual y registro en historial (SQLite).
 
----
-
-## Cómo ejecutarlo
+## Ejecución
 
 ```bash
-# 1. Instalar dependencias (una sola vez)
 pip install -r requirements.txt
-
-# 2. Generar el dataset (500 clientes, "sucio" a propósito)
 python generar_dataset.py
-
-# 3. Limpiar, entrenar y comparar los modelos (genera ml/modelo.pkl)
 python entrenar.py
-
-# 4. Abrir la aplicación web
 streamlit run app.py
 ```
 
-Se abre en el navegador en `http://localhost:8501`.
-Si cambias el dataset o reentrenas, **reinicia la app** (Ctrl+C y volver a ejecutar el paso 4).
+La aplicación abre en `http://localhost:8501`. Si se reentrena el modelo, hay que reiniciar la aplicación.
 
----
+## Estructura
 
-## Estructura del proyecto
-
-```
-churn-app/
-├── generar_dataset.py   # crea data/clientes_raw.csv (505 filas con nulos y duplicados)
-├── entrenar.py          # Pandas + limpieza + 3 modelos + métricas + guarda el mejor
-├── app.py               # interfaz web (Streamlit): dashboard, predicción, historial, modelo
-├── utils.py             # lógica: cargar modelo, nivel de riesgo, base de datos SQLite
-├── requirements.txt
-├── data/
-│   ├── clientes_raw.csv # datos originales (sucios)
-│   └── clientes.csv     # datos limpios (500 filas)
-├── ml/
-│   ├── modelo.pkl       # modelo entrenado que usa la app
-│   └── metricas.json    # resultados de la comparación de modelos
-├── assets/              # logo e ícono
-├── .streamlit/config.toml  # colores y tema
-└── database.db          # historial de predicciones (se crea sola)
-```
-
----
+| Archivo | Contenido |
+|---|---|
+| `generar_dataset.py` | Crea `data/clientes_raw.csv` con 505 filas, nulos y duplicados |
+| `entrenar.py` | Exploración con Pandas, limpieza, tres modelos, métricas y guardado del mejor |
+| `app.py` | Interfaz web en Streamlit: dashboard, predicción, historial y análisis del modelo |
+| `utils.py` | Carga del modelo, nivel de riesgo y base de datos SQLite |
+| `data/` | Datos originales (`clientes_raw.csv`) y datos limpios (`clientes.csv`) |
+| `ml/` | Modelo entrenado (`modelo.pkl`) y resultados (`metricas.json`) |
+| `assets/` | Logo e ícono |
+| `.streamlit/config.toml` | Tema visual |
 
 ## Cumplimiento del enunciado
 
-| Requisito | Dónde está |
+| Requisito | Ubicación |
 |---|---|
-| Dataset con mínimo 150 registros | `data/clientes.csv` → 500 registros |
-| Análisis con Pandas | `entrenar.py` sección 1 (`head`, `dtypes`, `describe`, nulos, duplicados) |
-| Limpieza y preparación | `entrenar.py` sección 2 (duplicados, valores imposibles, nulos → mediana) |
-| Variables X e y | `entrenar.py` sección 3 |
-| División entrenamiento / prueba | `entrenar.py` sección 4 (80 % / 20 %, estratificada) |
-| Mínimo 2 modelos de clasificación | Regresión Logística, Random Forest y KNN |
-| Accuracy, matriz de confusión, reporte | `entrenar.py` sección 6 y página **Análisis del modelo** de la app |
-| Comparación y selección del modelo | `entrenar.py` sección 7 → se guarda en `ml/modelo.pkl` |
-| Dashboard, tarjetas, menú, logo | Página **Dashboard** |
-| Formulario + botón Predecir + resultado visual | Página **Nueva predicción** |
-| Gráficas (mínimo 2) | Dashboard: 4 gráficas · Predicción: medidor y radar |
-| Historial (nombre, fecha, datos, resultado, probabilidad) | Página **Historial** (SQLite) |
-| Diseño responsive | Cuadrícula adaptable + CSS para celular |
+| Dataset de al menos 150 registros | `data/clientes.csv`, 500 registros |
+| Análisis con Pandas | `entrenar.py`, sección 1 |
+| Limpieza y preparación | `entrenar.py`, sección 2 |
+| Variables X e y | `entrenar.py`, sección 3 |
+| División entrenamiento y prueba | `entrenar.py`, sección 4 (80 % y 20 %, estratificada) |
+| Al menos dos modelos de clasificación | Regresión Logística, Random Forest y KNN |
+| Accuracy, matriz de confusión y reporte | `entrenar.py`, sección 6, y página Análisis del modelo |
+| Selección del modelo | `entrenar.py`, sección 7, guardado en `ml/modelo.pkl` |
+| Dashboard, tarjetas, menú y logo | Página Dashboard |
+| Formulario, botón Predecir y resultado visual | Página Nueva predicción |
+| Al menos dos gráficas | Dashboard con cuatro gráficas y dos más en Nueva predicción |
+| Historial con nombre, fecha, datos, resultado y probabilidad | Página Historial |
+| Diseño responsive | Cuadrícula adaptable y reglas CSS para pantallas pequeñas |
 
----
+## Conceptos clave
 
-## Conceptos clave (para la sustentación)
+- El modelo se entrena una sola vez con `entrenar.py` y se guarda con `joblib`. La aplicación solo lo carga y predice.
+- El `StandardScaler` va dentro del `Pipeline` guardado, de modo que la aplicación aplica el mismo escalado del entrenamiento.
+- Se usa `predict_proba` para obtener una probabilidad. El nivel de riesgo es Bajo por debajo de 40 %, Medio entre 40 % y 70 %, y Alto desde 70 %.
+- Las columnas se reordenan con `modelo["features"]` antes de predecir, porque un orden distinto produce resultados erróneos sin mostrar errores.
+- Los datos son sintéticos. El abandono depende de la satisfacción, la antigüedad y la frecuencia de compra, más ruido aleatorio. Por eso el accuracy ronda el 75 % y no el 100 %.
+- Con 100 casos de prueba, el accuracy varía unos puntos entre ejecuciones. La validación cruzada de `metricas.json` es una estimación más estable.
+- En la página de predicción, el efecto de cada variable se calcula reemplazando su valor por la mediana de la base y midiendo cuánto cambia la probabilidad.
 
-- **El modelo se entrena una sola vez** (`entrenar.py`) y se guarda con `joblib`. La app solo lo
-  *carga* y predice; nunca entrena.
-- **Pipeline:** el `StandardScaler` va dentro del modelo guardado. Así la app aplica exactamente
-  el mismo escalado que en el entrenamiento.
-- **Probabilidad, no solo 0/1:** se usa `predict_proba` para mostrar "82 %". Con eso se define el
-  nivel de riesgo: **Bajo < 40 %**, **Medio 40–70 %**, **Alto ≥ 70 %**.
-- **Orden de columnas:** se reordenan con `modelo["features"]` antes de predecir. Si el orden cambia,
-  el modelo da resultados absurdos sin mostrar ningún error.
-- **Datos sintéticos con lógica:** el abandono depende de satisfacción, antigüedad, frecuencia, etc.
-  más ruido aleatorio. Por eso el accuracy ronda el **75 %** y no 100 %: un resultado perfecto en
-  datos reales sería señal de *overfitting* o de fuga de información.
-- **Limitación honesta:** con solo 100 casos de prueba, el accuracy varía unos puntos entre
-  ejecuciones. La validación cruzada (en `metricas.json`) da una estimación más estable.
+## Uso de un dataset real
 
----
-
-## Usar un dataset real
-
-Reemplaza `data/clientes_raw.csv` por tu archivo manteniendo estas columnas:
-`edad, ingresos, frecuencia_compra, cantidad_productos, tiempo_cliente, satisfaccion, abandono`
-(`abandono` = 1 si el cliente se fue, 0 si permanece) y vuelve a ejecutar `entrenar.py`.
+Reemplazar `data/clientes_raw.csv` por un archivo con las columnas `edad`, `ingresos`, `frecuencia_compra`, `cantidad_productos`, `tiempo_cliente`, `satisfaccion` y `abandono` (1 si el cliente se fue, 0 si permanece), y ejecutar de nuevo `entrenar.py`.
