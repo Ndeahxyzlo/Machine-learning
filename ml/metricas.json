@@ -1,0 +1,164 @@
+{
+  "modelo_seleccionado": "Regresión Logística",
+  "criterio": "Mayor accuracy en el conjunto de prueba (desempate por F1 de la clase Abandona)",
+  "n_total": 500,
+  "n_train": 400,
+  "n_test": 100,
+  "features": [
+    "edad",
+    "ingresos",
+    "frecuencia_compra",
+    "cantidad_productos",
+    "tiempo_cliente",
+    "satisfaccion"
+  ],
+  "tasa_abandono": 0.352,
+  "resultados": {
+    "Regresión Logística": {
+      "accuracy": 0.75,
+      "precision": 0.7272727272727273,
+      "recall": 0.45714285714285713,
+      "f1": 0.5614035087719298,
+      "roc_auc": 0.7503296703296704,
+      "cv_accuracy_media": 0.7825,
+      "cv_accuracy_std": 0.039210967853395284,
+      "matriz_confusion": [
+        [
+          59,
+          6
+        ],
+        [
+          19,
+          16
+        ]
+      ],
+      "reporte": {
+        "Permanece": {
+          "precision": 0.7564102564102564,
+          "recall": 0.9076923076923077,
+          "f1-score": 0.8251748251748252,
+          "support": 65.0
+        },
+        "Abandona": {
+          "precision": 0.7272727272727273,
+          "recall": 0.45714285714285713,
+          "f1-score": 0.5614035087719298,
+          "support": 35.0
+        },
+        "accuracy": 0.75,
+        "macro avg": {
+          "precision": 0.7418414918414918,
+          "recall": 0.6824175824175824,
+          "f1-score": 0.6932891669733775,
+          "support": 100.0
+        },
+        "weighted avg": {
+          "precision": 0.7462121212121212,
+          "recall": 0.75,
+          "f1-score": 0.7328548644338119,
+          "support": 100.0
+        }
+      }
+    },
+    "Random Forest": {
+      "accuracy": 0.73,
+      "precision": 0.6818181818181818,
+      "recall": 0.42857142857142855,
+      "f1": 0.5263157894736842,
+      "roc_auc": 0.7068131868131868,
+      "cv_accuracy_media": 0.7675,
+      "cv_accuracy_std": 0.030207614933986427,
+      "matriz_confusion": [
+        [
+          58,
+          7
+        ],
+        [
+          20,
+          15
+        ]
+      ],
+      "reporte": {
+        "Permanece": {
+          "precision": 0.7435897435897436,
+          "recall": 0.8923076923076924,
+          "f1-score": 0.8111888111888111,
+          "support": 65.0
+        },
+        "Abandona": {
+          "precision": 0.6818181818181818,
+          "recall": 0.42857142857142855,
+          "f1-score": 0.5263157894736842,
+          "support": 35.0
+        },
+        "accuracy": 0.73,
+        "macro avg": {
+          "precision": 0.7127039627039626,
+          "recall": 0.6604395604395604,
+          "f1-score": 0.6687523003312477,
+          "support": 100.0
+        },
+        "weighted avg": {
+          "precision": 0.721969696969697,
+          "recall": 0.73,
+          "f1-score": 0.7114832535885168,
+          "support": 100.0
+        }
+      }
+    },
+    "K-Nearest Neighbors": {
+      "accuracy": 0.74,
+      "precision": 0.68,
+      "recall": 0.4857142857142857,
+      "f1": 0.5666666666666667,
+      "roc_auc": 0.6938461538461538,
+      "cv_accuracy_media": 0.7525000000000001,
+      "cv_accuracy_std": 0.031024184114977135,
+      "matriz_confusion": [
+        [
+          57,
+          8
+        ],
+        [
+          18,
+          17
+        ]
+      ],
+      "reporte": {
+        "Permanece": {
+          "precision": 0.76,
+          "recall": 0.8769230769230769,
+          "f1-score": 0.8142857142857143,
+          "support": 65.0
+        },
+        "Abandona": {
+          "precision": 0.68,
+          "recall": 0.4857142857142857,
+          "f1-score": 0.5666666666666667,
+          "support": 35.0
+        },
+        "accuracy": 0.74,
+        "macro avg": {
+          "precision": 0.72,
+          "recall": 0.6813186813186813,
+          "f1-score": 0.6904761904761905,
+          "support": 100.0
+        },
+        "weighted avg": {
+          "precision": 0.732,
+          "recall": 0.74,
+          "f1-score": 0.7276190476190476,
+          "support": 100.0
+        }
+      }
+    }
+  },
+  "importancias": {
+    "satisfaccion": 0.128,
+    "tiempo_cliente": 0.03,
+    "frecuencia_compra": 0.024,
+    "ingresos": 0.0147,
+    "cantidad_productos": 0.004,
+    "edad": 0.0
+  }
+}
